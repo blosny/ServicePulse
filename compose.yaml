@@ -1,9 +1,26 @@
 services:
-  postgres:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # ÖNEMLİ: Uygulama artık localhost değil, Docker içindeki 'db' ismini kullanacak
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/servicepulse
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=mysecretpassword
+      - GEMINI_API_KEY=YENI_ALACAGIN_API_KEY_BURAYA
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
     image: 'postgres:latest'
     environment:
       - 'POSTGRES_DB=servicepulse'
-      - 'POSTGRES_PASSWORD=mysecretpassword' # Şifreyi daha spesifik yapalım
-      - 'POSTGRES_USER=admin'                 # Kullanıcıyı admin yapalım
-    ports:
-      - '5433:5432' # Bilgisayarındaki 5433'ü Docker'daki 5432'ye bağladık
+      - 'POSTGRES_PASSWORD=mysecretpassword'
+      - 'POSTGRES_USER=admin'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d servicepulse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
