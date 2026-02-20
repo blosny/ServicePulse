@@ -8,8 +8,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
     
     @Bean
-    public WebClient webClient(WebClient.Builder builder) {
-        // http isteği atacak
-        return builder.build();
+    public WebClient webClient() {
+        // Dışarıdan builder beklemiyoruz, kendimiz o an oluşturuyoruz.
+        // Bu hata riskini sıfıra indirir.
+        return WebClient.builder().build();
     }
 }
