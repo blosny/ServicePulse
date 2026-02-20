@@ -6,30 +6,25 @@
     <title>ServicePulse | Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .pulse-ring {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: .5; transform: scale(1.1); }
-        }
+        .pulse-ring { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(1.1); } }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
     </style>
 </head>
 <body class="antialiased">
     <div class="min-h-screen flex flex-col max-w-7xl mx-auto px-6 py-10">
-        <!-- Header -->
         <header class="flex justify-between items-center border-b border-slate-800 pb-8 mb-10">
             <div>
                 <h1 class="text-2xl font-bold tracking-tighter flex items-center gap-2">
                     <div class="w-3 h-3 bg-blue-500 rounded-full pulse-ring"></div>
                     SERVICE<span class="text-blue-500">PULSE</span>
                 </h1>
-                <p class="text-slate-500 text-sm mt-1">Sistem Gözlemleme ve Akıllı Hata Analizi</p>
+                <p class="text-slate-500 text-sm mt-1 italic font-light">Sistem Gözlemleme ve Akıllı Hata Analizi</p>
             </div>
             <div class="flex items-center gap-6">
                 <div class="text-right">
@@ -44,24 +39,17 @@
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="grid grid-cols-12 gap-10 flex-grow">
-            <!-- Sidebar: Site List -->
-            <div class="col-span-12 lg:col-span-4 flex flex-col gap-4">
-                <h2 class="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">İzlenen Servisler</h2>
-                <div id="siteList" class="space-y-3 custom-scrollbar overflow-y-auto max-h-[70vh]">
-                    <!-- JS ile dolacak -->
-                </div>
+            <div class="col-span-12 lg:col-span-4">
+                <h2 class="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">İzlenen Servisler</h2>
+                <div id="siteList" class="space-y-3 custom-scrollbar overflow-y-auto max-h-[70vh]"></div>
             </div>
-
-            <!-- Analysis Panel -->
             <div class="col-span-12 lg:col-span-8">
-                <div id="analysisContainer" class="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 min-h-[600px] flex flex-col">
-                    <div id="analysisHeader" class="mb-8">
+                <div id="analysisContainer" class="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 min-h-[600px]">
+                    <div class="mb-8">
                         <h2 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Detaylı Analiz Paneli</h2>
                         <h3 id="selectedSiteName" class="text-2xl font-semibold text-white italic">Bir servis seçiniz</h3>
                     </div>
-                    
                     <div id="analysisBody" class="space-y-8">
                         <div class="flex items-center justify-center h-96 text-slate-600 italic">
                             Soldaki listeden bir servisi seçerek analiz raporunu görüntüleyebilirsiniz.
@@ -74,49 +62,52 @@
 
     <script>
         async function loadSites() {
-            const res = await fetch('/api/sites');
-            const sites = await res.json();
-            const container = document.getElementById('siteList');
-            container.innerHTML = '';
-
-            sites.forEach(site => {
-                const statusColor = site.up ? 'emerald' : 'rose';
-                const card = document.createElement('div');
-                card.className = `group bg-slate-900/50 border border-slate-800 p-5 rounded-xl cursor-pointer hover:border-blue-500/50 transition-all active:scale-[0.98]`;
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-slate-400 text-[10px] mono uppercase mb-1">${site.url.split('//')[1]}</p>
-                            <h4 class="font-bold text-lg group-hover:text-blue-400 transition-colors">${site.name}</h4>
-                        </div>
-                        <div class="flex flex-col items-end">
-                            <span class="w-2 h-2 rounded-full bg-${statusColor}-500 mb-2"></span>
-                            <span class="text-[10px] font-bold text-${statusColor}-400">${site.up ? 'ONLINE' : 'OFFLINE'}</span>
-                        </div>
-                    </div>
-                `;
-                card.onclick = () => showDetails(site);
-                container.appendChild(card);
-            });
+            try {
+                const res = await fetch('/api/sites');
+                const sites = await res.json();
+                const container = document.getElementById('siteList');
+                container.innerHTML = '';
+                sites.forEach(site => {
+                    const statusColor = site.up ? 'emerald' : 'rose';
+                    const card = document.createElement('div');
+                    card.className = `group bg-slate-900/50 border border-slate-800 p-5 rounded-xl cursor-pointer hover:border-blue-500/50 transition-all`;
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-slate-400 text-[10px] mono uppercase mb-1">${site.url.replace('https://', '')}</p>
+                                <h4 class="font-bold text-lg group-hover:text-blue-400 transition-colors">${site.name}</h4>
+                            </div>
+                            <div class="flex flex-col items-end text-[10px] font-bold text-${statusColor}-400">
+                                <span class="w-2 h-2 rounded-full bg-${statusColor}-500 mb-2"></span>
+                                ${site.up ? 'ONLINE' : 'OFFLINE'}
+                            </div>
+                        </div>`;
+                    card.onclick = () => showDetails(site);
+                    container.appendChild(card);
+                });
+            } catch (e) { console.error("Veri çekilemedi", e); }
         }
 
         async function showDetails(site) {
             document.getElementById('selectedSiteName').innerText = site.name;
+            const body = document.getElementById('analysisBody');
+            
             const res = await fetch('/api/sites/history');
             const history = await res.json();
             const lastCheck = history.reverse().find(h => h.site.id === site.id);
 
-            const body = document.getElementById('analysisBody');
             if (!lastCheck) {
                 body.innerHTML = '<div class="text-slate-500 italic">Henüz bir kontrol verisi yok.</div>';
                 return;
             }
 
+            const statusColor = lastCheck.success ? 'emerald' : 'rose';
+            
             body.innerHTML = `
                 <div class="grid grid-cols-3 gap-4">
                     <div class="bg-slate-800/30 p-4 rounded-lg border border-slate-700/50">
                         <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">HTTP Status</p>
-                        <p class="text-xl mono ${lastCheck.success ? 'text-emerald-400' : 'text-rose-400'}">${lastCheck.statusCode}</p>
+                        <p class="text-xl mono text-${statusColor}-400">${lastCheck.statusCode}</p>
                     </div>
                     <div class="bg-slate-800/30 p-4 rounded-lg border border-slate-700/50">
                         <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Response Time</p>
@@ -127,28 +118,25 @@
                         <p class="text-sm text-slate-300 mono mt-1">${new Date(lastCheck.checkedAt).toLocaleTimeString()}</p>
                     </div>
                 </div>
-
                 ${!lastCheck.success ? `
                 <div class="space-y-4">
                     <div class="p-5 bg-rose-500/5 border border-rose-500/20 rounded-xl">
                         <h4 class="text-rose-400 text-xs font-bold uppercase mb-2">Hata Detayı</h4>
-                        <p class="text-sm text-rose-200 mono">${lastCheck.errorMessage}</p>
+                        <p class="text-sm text-rose-200 mono">${lastCheck.errorMessage || 'Bağlantı hatası'}</p>
                     </div>
                     <div class="p-6 bg-blue-500/5 border border-blue-500/20 rounded-xl">
                         <h4 class="text-blue-400 text-xs font-bold uppercase mb-3 flex items-center gap-2">
                             <i class="fas fa-magic"></i> AI Kök Neden Analizi
                         </h4>
-                        <div class="text-slate-300 text-sm leading-relaxed">
-                            ${lastCheck.aiAnalysis || "Analiz üretiliyor..."}
+                        <div class="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
+                            ${lastCheck.aiAnalysis || "Analiz raporu oluşturulamadı."}
                         </div>
                     </div>
-                </div>
-                ` : `
-                <div class="flex flex-col items-center justify-center h-48 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
+                </div>` : `
+                <div class="flex flex-col items-center justify-center h-48 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl mt-8">
                     <div class="text-emerald-500 text-4xl mb-3 font-bold">✓</div>
-                    <p class="text-emerald-400 text-sm">Sistem optimize çalışıyor. Hiçbir sorun tespit edilmedi.</p>
-                </div>
-                `}
+                    <p class="text-emerald-400 text-sm">Sistem optimize çalışıyor. Herhangi bir anomali tespit edilmedi.</p>
+                </div>`}
             `;
         }
 
