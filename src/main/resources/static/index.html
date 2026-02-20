@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>ServicePulse | System Monitor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0a0f1e; color: #f8fafc; }
+        .card { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-12">
+            <h1 class="text-3xl font-extrabold text-blue-500 tracking-tighter">Service<span class="text-white">Pulse</span></h1>
+            <div id="status" class="bg-green-500/20 text-green-400 px-4 py-1 rounded-full text-sm font-mono border border-green-500/30">Monitoring Active</div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- İzlenen Servisler -->
+            <div class="card p-6 rounded-2xl">
+                <h2 class="text-xl font-bold mb-6 flex items-center border-b border-white/10 pb-2">📡 İzlenen Servisler</h2>
+                <div id="siteList" class="space-y-4"></div>
+            </div>
+
+            <!-- Son AI Analizi -->
+            <div class="card p-6 rounded-2xl">
+                <h2 class="text-xl font-bold mb-6 flex items-center border-b border-white/10 pb-2">🤖 Akıllı Analiz Raporu</h2>
+                <div id="aiBox" class="text-gray-400 italic">Analiz detaylarını görmek için listeden bir site seçin...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadData() {
+            const res = await fetch('/api/sites');
+            const sites = await res.json();
+            const container = document.getElementById('siteList');
+            container.innerHTML = '';
+
+            sites.forEach(site => {
+                const div = document.createElement('div');
+                div.className = `p-4 rounded-xl cursor-pointer hover:bg-slate-800 transition-all ${site.up ? 'border-l-4 border-green-500' : 'border-l-4 border-red-500'}`;
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-lg">${site.name}</span>
+                        <span class="${site.up ? 'text-green-400' : 'text-red-400'} font-mono text-xs">${site.up ? 'ONLINE' : 'OFFLINE'}</span>
+                    </div>
+                    <div class="text-xs text-gray-500 truncate mt-1">${site.url}</div>
+                `;
+                div.onclick = () => showHistory(site.id);
+                container.appendChild(div);
+            });
+        }
+
+        async function showHistory(siteId) {
+            const res = await fetch('/api/sites/history'); // Tüm geçmişi çekip filtreleyebiliriz
+            const history = await res.json();
+            const lastError = history.reverse().find(h => h.site.id === siteId && !h.success);
+            
+            const aiBox = document.getElementById('aiBox');
+            if (lastError && lastError.aiAnalysis) {
+                aiBox.innerHTML = `
+                    <div class="space-y-4">
+                        <p class="text-red-400 font-mono text-sm underline">Son Hata:</p>
+                        <p class="bg-black/30 p-3 rounded-lg text-sm">${lastError.errorMessage}</p>
+                        <p class="text-blue-400 font-mono text-sm underline">AI Tavsiyesi:</p>
+                        <p class="text-gray-200 leading-relaxed">${lastError.aiAnalysis}</p>
+                    </div>`;
+            } else {
+                aiBox.innerHTML = '<p class="text-green-400">✅ Bu servis şu an sağlıklı görünüyor.</p>';
+            }
+        }
+
+        loadData();
+        setInterval(loadData, 30000); // 30 saniyede bir güncelle
+    </script>
+</body>
+</html>
